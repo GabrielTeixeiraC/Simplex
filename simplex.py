@@ -15,21 +15,6 @@ def canonicalForm(A, c, base):
     c = np.around(c, decimals=4)
     return A, c
 
-def removeLinearlyDependent(A, b, N):
-    for i in range(N):
-        if (A[i][i] != 0):
-            A[i, :] /= A[i][i]
-        for j in range(N):
-            if (i != j):
-                aPivot = A[j][i] * -1
-                A[j, :] += A[i, :] * aPivot
-    if(np.all(A[-1] == 0)):
-        A = np.delete(A, -1, 0)
-        b = np.delete(b, -1, 0)
-        N -= 1
-    A = np.around(A, decimals=4)
-    return A, b, N
-
 def findPivotToEnterBase(A, c):
     N = A.shape[0]
     for j in range(N, len(c)):
@@ -50,7 +35,6 @@ def findPivotToEnterBase(A, c):
                     min = value
                     lineIndex = i
             break
-
     return lineIndex, columnIndex, unbounded
 
 def printC(c):
@@ -79,10 +63,10 @@ def simplex(A, c, base):
         lineIndex, columnIndex, unbounded = findPivotToEnterBase(A, c)
        
         if (unbounded):
-            d = np.zeros(len(c))
-            d[columnIndex] = 1
+            d = np.zeros(M + N)
+            d[columnIndex - N] = 1
             for i in range(len(base)):
-                d[i] = -1 * A[base[i]][i]
+                d[base[i] - N] = -1 * A[i][columnIndex]
             certificate = d
             optimal = 'unbounded'
             solution = findSolution(A, c, base)
@@ -155,10 +139,12 @@ else:
     certificate, optimal, solution = simplex(A, c, base)
     if(optimal == 'unbounded'):
         print("ilimitada")
+        printArray(solution[:M])
+        printArray(certificate[:M])
 
     else:
         print("otima")
         print(optimal)
         printArray(solution[:M])
         printArray(certificate)
-        print("FIM")
+print("FIM")
