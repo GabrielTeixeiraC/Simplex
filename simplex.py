@@ -78,7 +78,7 @@ def simplex(A, c, base):
     solution = findSolution(A, c, base)
     
     certificate = c[:N]
-    optimal = c[-1] 
+    optimal = c[-1]
     return certificate, optimal, solution
 
 def printArray(array):
@@ -105,17 +105,16 @@ A = np.array(restrictions[:,:-1])
 b = b.reshape(N, 1)
 
 A = np.concatenate((A, np.eye(N)), axis=1)
+A = np.concatenate((np.eye(N), A), axis=1)
 
 for i in range(N):
     if (b[i] < 0):
         b[i] *= -1
         A[i] *= -1
 
-auxiliaryA = np.concatenate((np.eye(N), A), axis=1)
-auxiliaryA = np.concatenate((auxiliaryA, np.eye(N)), axis=1)
+auxiliaryA = np.concatenate((A, np.eye(N)), axis=1)
 auxiliaryA = np.concatenate((auxiliaryA, b), axis=1)
 
-A = np.concatenate((np.eye(N), A), axis=1)
 A = np.concatenate((A, b), axis=1)
 
 
