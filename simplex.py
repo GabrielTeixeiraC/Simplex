@@ -1,5 +1,10 @@
 import numpy as np
 
+def zero(value):
+    if (abs(value) < 1e-4):
+        value = 0.0
+    return value
+
 # canonical form
 def canonicalForm(A, c, base):
     for i in range(len(base)):
@@ -11,8 +16,9 @@ def canonicalForm(A, c, base):
                 A[j, :] += A[i, :] * aPivot
         cPivot = c[base[i]] * -1
         c += A[i, :] * cPivot
-    A = np.around(A, decimals=4)
-    c = np.around(c, decimals=4)
+    vfunc = np.vectorize(zero)
+    A = vfunc(A)
+    c = vfunc(c)
     return A, c
 
 def findPivotToEnterBase(A, c):
@@ -58,10 +64,15 @@ def findSolution(A, c, base):
     return solution
 
 def simplex(A, c, base):
+    printC(c)
+    printA(A)
     A, c = canonicalForm(A, c, base)
+    printC(c)
+    printA(A)
     while(np.any(c[N:len(c) - 1] < 0)):
+        printC(c)
+        printA(A)
         lineIndex, columnIndex, unbounded = findPivotToEnterBase(A, c)
-       
         if (unbounded):
             d = np.zeros(M + N)
             d[columnIndex - N] = 1
@@ -74,16 +85,44 @@ def simplex(A, c, base):
 
         base[lineIndex] = columnIndex
         A, c = canonicalForm(A, c, base)
-
+    while(np.any(A[:, -1] < 0)):
+        A, c, base = dualSimplex(A, c, base)
+        A, c = canonicalForm(A, c, base)
+        printC(c)
+        printA(A)
+    printC(c)
+    printA(A)
     solution = findSolution(A, c, base)
     
     certificate = c[:N]
     optimal = c[-1]
     return certificate, optimal, solution
 
+def dualSimplex(A, c, base):
+    N = A.shape[0]
+    M = A.shape[1] - 1
+    b = A[:, -1]
+    lineIndex = -1
+    columnIndex = -1
+    for i in range(N):
+        if(b[i] < 0):
+            lineIndex = i
+            break
+    if(lineIndex == -1):
+        return A, c, base
+    minimum = 1000
+    for j in range(N, M):
+        if(A[lineIndex][j] < 0):
+            value = c[j]/(A[lineIndex][j] * -1)
+            if(value < minimum):
+                minimum = value
+                columnIndex = j
+    base[lineIndex] = columnIndex
+    return A, c, base   
+
 def printArray(array):
     for i in range(len(array)):
-        print(array[i], end=' ')
+        print('{:.7f}'.format(array[i]), end=' ')
     print()
 
 N, M = input().split()    # number of restrictions and variables
@@ -117,7 +156,6 @@ auxiliaryA = np.concatenate((auxiliaryA, b), axis=1)
 
 A = np.concatenate((A, b), axis=1)
 
-
 numColumnsAuxiliary = auxiliaryA.shape[1]
 
 auxiliaryC = np.zeros(numColumnsAuxiliary)
@@ -126,6 +164,7 @@ auxiliaryC[numColumnsAuxiliary - (N + 1):-1] = 1
 auxiliaryBase = list(range(numColumnsAuxiliary - (N + 1), numColumnsAuxiliary - 1))
 
 certificate, optimal, solution = simplex(auxiliaryA, auxiliaryC, auxiliaryBase)
+
 if(optimal < 0):
     print("inviavel")
     printArray(certificate)
@@ -143,7 +182,6 @@ else:
 
     else:
         print("otima")
-        print(optimal)
+        print('{:.7f}'.format(optimal))
         printArray(solution[:M])
         printArray(certificate)
-print("FIM")
