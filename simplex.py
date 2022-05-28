@@ -43,19 +43,6 @@ def findPivotToEnterBase(A, c):
             break
     return lineIndex, columnIndex, unbounded
 
-def printC(c):
-    for i in range(len(c)):
-        print(c[i], end='\t')
-    print()
-    print()
-
-def printA(A):
-    for i in range(len(A)):
-        for j in range(len(A[0])):
-            print(A[i][j], end='\t')
-        print()
-    print()
-
 def findSolution(A, c, base):
     N = A.shape[0]
     solution = np.zeros(len(c) - N)
@@ -64,14 +51,8 @@ def findSolution(A, c, base):
     return solution
 
 def simplex(A, c, base):
-    printC(c)
-    printA(A)
     A, c = canonicalForm(A, c, base)
-    printC(c)
-    printA(A)
     while(np.any(c[N:len(c) - 1] < 0)):
-        printC(c)
-        printA(A)
         lineIndex, columnIndex, unbounded = findPivotToEnterBase(A, c)
         if (unbounded):
             d = np.zeros(M + N)
@@ -81,22 +62,21 @@ def simplex(A, c, base):
             certificate = d
             optimal = 'unbounded'
             solution = findSolution(A, c, base)
-            return certificate, optimal, solution
-
+            return certificate, optimal, solution, base
         base[lineIndex] = columnIndex
         A, c = canonicalForm(A, c, base)
     while(np.any(A[:, -1] < 0)):
         A, c, base = dualSimplex(A, c, base)
         A, c = canonicalForm(A, c, base)
-        printC(c)
-        printA(A)
-    printC(c)
-    printA(A)
+
     solution = findSolution(A, c, base)
     
+    base = np.array(base)
+    base.sort()
+    base = base[:N]
     certificate = c[:N]
     optimal = c[-1]
-    return certificate, optimal, solution
+    return certificate, optimal, solution, base
 
 def dualSimplex(A, c, base):
     N = A.shape[0]
@@ -163,18 +143,21 @@ auxiliaryC[numColumnsAuxiliary - (N + 1):-1] = 1
 
 auxiliaryBase = list(range(numColumnsAuxiliary - (N + 1), numColumnsAuxiliary - 1))
 
-certificate, optimal, solution = simplex(auxiliaryA, auxiliaryC, auxiliaryBase)
+certificate, optimal, solution, base = simplex(auxiliaryA, auxiliaryC, auxiliaryBase)
 
 if(optimal < 0):
     print("inviavel")
     printArray(certificate)
 else:
-    numColumns = A.shape[1]
+    numColumns = A.shape[1] - 1
     c = np.concatenate((np.zeros(N), c))
     c = np.concatenate((c, np.zeros(N)))
     c = np.concatenate((c, np.array([0])))
-    base = list(range(numColumns - (N + 1), numColumns - 1))
-    certificate, optimal, solution = simplex(A, c, base)
+    for i in range(len(base)):
+        if(base[i] > numColumns):
+            base[i] = base[i] - N
+
+    certificate, optimal, solution, base = simplex(A, c, base)
     if(optimal == 'unbounded'):
         print("ilimitada")
         printArray(solution[:M])
