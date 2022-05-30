@@ -5,7 +5,6 @@ def zero(value):
         value = 0.0
     return value
 
-# canonical form
 def canonicalForm(A, c, base):
     for i in range(len(base)):
         if (A[i][base[i]] != 0):
@@ -105,7 +104,7 @@ def printArray(array):
         print('{:.7f}'.format(array[i]), end=' ')
     print()
 
-N, M = input().split()    # number of restrictions and variables
+N, M = input().split()
 N = int(N)
 M = int(M)
 
@@ -145,6 +144,11 @@ auxiliaryBase = list(range(numColumnsAuxiliary - (N + 1), numColumnsAuxiliary - 
 
 certificate, optimal, solution, base = simplex(auxiliaryA, auxiliaryC, auxiliaryBase)
 
+vfunc = np.vectorize(zero)
+certificate = vfunc(certificate)
+optimal = vfunc(optimal)
+solution = vfunc(solution)
+
 if(optimal < 0):
     print("inviavel")
     printArray(certificate)
@@ -158,6 +162,10 @@ else:
             base[i] = base[i] - N
 
     certificate, optimal, solution, base = simplex(A, c, base)
+
+    certificate = vfunc(certificate)
+    solution = vfunc(solution)
+
     if(optimal == 'unbounded'):
         print("ilimitada")
         printArray(solution[:M])
